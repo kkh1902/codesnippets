@@ -1,9 +1,12 @@
+import { Category } from './category';
+
 export interface Post {
   id: number;
   title: string;
   content: string;
   author: string;
-  category?: string | null;
+  category_id?: number | null;
+  category?: Category | null;
   tags?: string | null;
   language?: string | null;
   is_markdown: boolean;
@@ -16,7 +19,7 @@ export interface PostCreate {
   title: string;
   content: string;
   author: string;
-  category?: string;
+  category_id?: number;
   tags?: string;
   language?: string;
   is_markdown?: boolean;
@@ -26,7 +29,7 @@ export interface PostUpdate {
   title?: string;
   content?: string;
   author?: string;
-  category?: string;
+  category_id?: number;
   tags?: string;
   language?: string;
   is_markdown?: boolean;

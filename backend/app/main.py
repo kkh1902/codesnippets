@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
-from app.routes import posts
+from app.routes import posts, categories, tags, uploads, auth, rag_search
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Board API",
-    description="Simple board API with FastAPI",
+    title="Code Snippets API",
+    description="Code snippets storage and management API",
     version="1.0.0"
 )
 
@@ -22,7 +22,12 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(posts.router, prefix="/api/posts", tags=["posts"])
+app.include_router(auth.router)
+app.include_router(posts.router)
+app.include_router(categories.router)
+app.include_router(tags.router)
+app.include_router(uploads.router)
+app.include_router(rag_search.router)
 
 @app.get("/")
 def read_root():

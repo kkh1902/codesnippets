@@ -7,12 +7,12 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
-    content = Column(Text, nullable=False)  # Markdown content
+    content = Column(Text, nullable=False)
     author = Column(String(100), nullable=False)
-    category = Column(String(50), nullable=True)  # Python, JavaScript, SQL, etc.
-    tags = Column(String(200), nullable=True)  # Comma-separated tags
-    language = Column(String(20), nullable=True)  # Code language for syntax highlighting
-    is_markdown = Column(Boolean, default=True)  # Support markdown rendering
+    category = Column(String(50), nullable=True)
+    tags = Column(String(200), nullable=True)
+    language = Column(String(20), nullable=True)
+    is_markdown = Column(Boolean, default=True)
     views = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

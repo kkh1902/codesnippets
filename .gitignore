@@ -12,6 +12,8 @@ ENV/
 *.db
 *.sqlite3
 mysql_data/
+chroma_data/
+backend/uploads/
 
 # Node.js
 node_modules/

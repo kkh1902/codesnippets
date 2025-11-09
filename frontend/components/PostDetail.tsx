@@ -29,7 +29,7 @@ export default function PostDetail({ post, onDelete }: PostDetailProps) {
         <div className="flex items-center flex-wrap gap-2 mb-3">
           {post.category && (
             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-              {post.category}
+              {post.category.name}
             </span>
           )}
           {post.language && (
