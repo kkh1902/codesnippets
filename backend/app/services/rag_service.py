@@ -56,5 +56,76 @@ class RAGService:
             "model": llm_response['model']
         }
 
+    def generate_code_snippet(self, prompt: str, language: str = None) -> Dict:
+        """AI로 코드 스니펫 생성"""
+        import ollama
+
+        generation_prompt = f"""당신은 코드 스니펫을 작성하는 전문가입니다.
+
+사용자 요청: {prompt}
+{f'언어: {language}' if language else ''}
+
+다음 형식으로 코드 스니펫을 작성해주세요:
+
+1. 제목: 간결하고 명확한 제목 (한 줄)
+2. 내용: 마크다운 형식으로 작성
+   - 간단한 설명
+   - 코드 예제 (마크다운 코드 블록 사용)
+   - 사용법 설명
+
+제목과 내용은 반드시 구분해서 작성하세요.
+코드는 반드시 마크다운 코드 블록(```)으로 감싸세요.
+
+형식:
+TITLE: 여기에 제목
+CONTENT:
+여기에 마크다운 형식의 내용
+"""
+
+        try:
+            response = ollama.generate(
+                model=self.llm_service.model_name,
+                prompt=generation_prompt,
+                options={
+                    "temperature": 0.7,
+                    "num_predict": 1500
+                }
+            )
+
+            generated_text = response['response']
+
+            # 제목과 내용 파싱
+            title = "AI 생성 코드 스니펫"
+            content = generated_text
+
+            if "TITLE:" in generated_text and "CONTENT:" in generated_text:
+                parts = generated_text.split("CONTENT:")
+                title_part = parts[0].replace("TITLE:", "").strip()
+                content = parts[1].strip()
+                title = title_part[:200]  # 제목 길이 제한
+
+            # 언어 추출
+            detected_language = language or "python"
+            if "```python" in content:
+                detected_language = "python"
+            elif "```javascript" in content or "```js" in content:
+                detected_language = "javascript"
+            elif "```typescript" in content or "```ts" in content:
+                detected_language = "typescript"
+            elif "```java" in content:
+                detected_language = "java"
+            elif "```go" in content:
+                detected_language = "go"
+
+            return {
+                "title": title,
+                "content": content,
+                "language": detected_language,
+                "tokens_used": response.get('eval_count', 0)
+            }
+
+        except Exception as e:
+            raise Exception(f"AI 생성 실패: {str(e)}")
+
 # 싱글톤 인스턴스
 rag_service = RAGService()

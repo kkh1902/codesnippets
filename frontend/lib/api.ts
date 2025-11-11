@@ -170,5 +170,11 @@ export const ragApi = {
   healthCheck: async () => {
     const response = await api.get('/api/rag/health');
     return response.data;
+  },
+
+  // AI로 코드 생성
+  generate: async (request: { prompt: string; language?: string }) => {
+    const response = await api.post('/api/rag/generate', request);
+    return response.data;
   }
 };

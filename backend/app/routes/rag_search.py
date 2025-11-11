@@ -45,3 +45,25 @@ async def health_check():
         "embedding_model": "jhgan/ko-sroberta-multitask",
         "llm_model": rag_service.llm_service.model_name
     }
+
+class AIGenerateRequest(BaseModel):
+    prompt: str
+    language: Optional[str] = None
+
+class AIGenerateResponse(BaseModel):
+    title: str
+    content: str
+    language: str
+    tokens_used: int
+
+@router.post("/generate", response_model=AIGenerateResponse)
+async def generate_post(request: AIGenerateRequest):
+    """AI로 코드 스니펫 생성"""
+    try:
+        result = rag_service.generate_code_snippet(
+            prompt=request.prompt,
+            language=request.language
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

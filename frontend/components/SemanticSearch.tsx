@@ -5,6 +5,10 @@ import { ragApi } from '@/lib/api';
 import { RAGSearchResponse } from '@/types/rag';
 import { Sparkles, Loader2, FileText } from 'lucide-react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 
 export default function SemanticSearch() {
   const [query, setQuery] = useState('');
@@ -93,8 +97,13 @@ export default function SemanticSearch() {
                 {result.model} · {result.tokens_used} tokens
               </span>
             </div>
-            <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
-              {result.answer}
+            <div className="prose prose-sm max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+              >
+                {result.answer}
+              </ReactMarkdown>
             </div>
           </div>
 

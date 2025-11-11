@@ -42,7 +42,10 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         is_superuser: response.data.is_superuser
       });
     } catch (error) {
-      console.error('Failed to fetch user info:', error);
+      // Silently handle auth errors (user not logged in)
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+      }
     }
   };
 

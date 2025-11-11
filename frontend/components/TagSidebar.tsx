@@ -106,19 +106,19 @@ export default function TagSidebar({ selectedTag, selectedCategory, onTagSelect,
             style={{ paddingLeft: `${level * 16 + 12}px` }}
           >
             {hasChildren && (
-              <button
+              <span
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleCategoryExpand(category.id);
                 }}
-                className="p-0.5"
+                className="p-0.5 cursor-pointer"
               >
                 {isExpanded ? (
                   <ChevronDown className="w-3 h-3" />
                 ) : (
                   <ChevronRight className="w-3 h-3" />
                 )}
-              </button>
+              </span>
             )}
             {!hasChildren && <div className="w-4" />}
 

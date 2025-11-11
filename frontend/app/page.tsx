@@ -6,10 +6,11 @@ import PostList from '@/components/PostList';
 import Pagination from '@/components/Pagination';
 import TagSidebar from '@/components/TagSidebar';
 import SemanticSearch from '@/components/SemanticSearch';
+import AIWriter from '@/components/AIWriter';
 import { postsApi } from '@/lib/api';
 import { PostList as PostListType } from '@/types/post';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Edit3 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function Home() {
   const [gridColumns, setGridColumns] = useState(3);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [searchMode, setSearchMode] = useState<'normal' | 'ai'>('normal');
+  const [searchMode, setSearchMode] = useState<'normal' | 'ai' | 'aiwriter'>('normal');
 
   const fetchPosts = async (page: number, searchQuery: string, categoryId?: number | null, tag?: string | null) => {
     try {
@@ -119,6 +120,17 @@ export default function Home() {
               <Sparkles className="w-4 h-4" />
               AI 검색
             </button>
+            <button
+              onClick={() => setSearchMode('aiwriter')}
+              className={`px-6 py-3 font-semibold transition-all flex items-center gap-2 ${
+                searchMode === 'aiwriter'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Edit3 className="w-4 h-4" />
+              AI 작성
+            </button>
           </div>
 
           {/* Normal Search UI */}
@@ -187,6 +199,8 @@ export default function Home() {
         {/* Content */}
         {searchMode === 'ai' ? (
           <SemanticSearch />
+        ) : searchMode === 'aiwriter' ? (
+          <AIWriter />
         ) : loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
