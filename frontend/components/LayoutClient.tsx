@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Sidebar from './Sidebar';
+import CategorySidebar from './CategorySidebar';
 import Header from './Header';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -30,19 +30,14 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-
       const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       setUserInfo({
         username: response.data.username,
-        is_superuser: response.data.is_superuser
+        is_superuser: response.data.is_superuser,
       });
-    } catch (error) {
-      // Silently handle auth errors (user not logged in)
+    } catch (error: any) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
       }
@@ -54,14 +49,15 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     localStorage.removeItem('username');
     setUsername(null);
     setUserInfo(null);
-    alert('로그아웃되었습니다.');
     router.push('/');
   };
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden ml-16">
+      <Suspense fallback={<aside className="w-56 shrink-0 bg-white border-r border-gray-200" />}>
+        <CategorySidebar />
+      </Suspense>
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header
           onMenuClick={() => {}}
           username={username}

@@ -25,7 +25,7 @@ export default function PostDetail({ post, onDelete }: PostDetailProps) {
     <div className="bg-white rounded-lg shadow-md">
       {/* Header */}
       <div className="border-b px-6 py-4">
-        <h1 className="text-2xl font-bold mb-3">{post.title}</h1>
+        <h1 className="text-2xl font-bold mb-3 text-gray-900">{post.title}</h1>
         <div className="flex items-center flex-wrap gap-2 mb-3">
           {post.category && (
             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">

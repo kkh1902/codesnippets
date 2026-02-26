@@ -1,4 +1,8 @@
-import ollama
+try:
+    import ollama
+    HAS_OLLAMA = True
+except ImportError:
+    HAS_OLLAMA = False
 from typing import List, Dict
 
 class LLMService:

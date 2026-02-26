@@ -1,53 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import PostList from '@/components/PostList';
 import Pagination from '@/components/Pagination';
-import TagSidebar from '@/components/TagSidebar';
-import SemanticSearch from '@/components/SemanticSearch';
-import AIWriter from '@/components/AIWriter';
 import { postsApi } from '@/lib/api';
 import { PostList as PostListType } from '@/types/post';
 import Link from 'next/link';
-import { Sparkles, Edit3 } from 'lucide-react';
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  const categoryId = searchParams.get('category_id')
+    ? Number(searchParams.get('category_id'))
+    : null;
+
   const [postList, setPostList] = useState<PostListType | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [gridColumns, setGridColumns] = useState(3);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [searchMode, setSearchMode] = useState<'normal' | 'ai' | 'aiwriter'>('normal');
 
-  const fetchPosts = async (page: number, searchQuery: string, categoryId?: number | null, tag?: string | null) => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await postsApi.getPosts(page, 10, searchQuery || undefined, categoryId || undefined, tag || undefined);
-      setPostList(data);
-    } catch (err) {
-      setError('게시글을 불러오는데 실패했습니다.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 카테고리 바뀌면 페이지 1로 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryId]);
 
   useEffect(() => {
-    if (searchMode === 'normal') {
-      fetchPosts(currentPage, search, selectedCategory, selectedTag);
-    }
-  }, [currentPage, search, selectedCategory, selectedTag, searchMode]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+    setLoading(true);
+    setError('');
+    postsApi
+      .getPosts(currentPage, 10, search || undefined, categoryId || undefined)
+      .then(setPostList)
+      .catch(() => setError('게시글을 불러오는데 실패했습니다.'))
+      .finally(() => setLoading(false));
+  }, [currentPage, search, categoryId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,177 +45,96 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const handleTagSelect = (tag: string | null) => {
-    setSelectedTag(tag);
-    setCurrentPage(1);
-  };
-
-  const handleCategorySelect = (categoryId: number | null) => {
-    setSelectedCategory(categoryId);
-    setCurrentPage(1);
-  };
-
   const totalPages = postList ? Math.ceil(postList.total / postList.page_size) : 1;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      {searchMode === 'normal' && (
-        <TagSidebar
-          selectedTag={selectedTag}
-          selectedCategory={selectedCategory}
-          onTagSelect={handleTagSelect}
-          onCategorySelect={handleCategorySelect}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">게시판</h1>
-            {selectedCategory && searchMode === 'normal' && (
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                카테고리 #{selectedCategory}
-              </span>
+    <div className="flex-1 px-6 py-6">
+      {/* 상단 툴바 */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="검색..."
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
+            />
+            <button
+              type="submit"
+              className="px-4 py-1.5 text-sm bg-gray-700 text-white rounded-md hover:bg-gray-800"
+            >
+              검색
+            </button>
+            {search && (
+              <button
+                type="button"
+                onClick={() => { setSearch(''); setSearchInput(''); }}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                초기화
+              </button>
             )}
-            {selectedTag && searchMode === 'normal' && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                #{selectedTag}
-              </span>
-            )}
+          </form>
+
+          {/* 그리드 토글 */}
+          <div className="flex items-center gap-1 ml-2">
+            {[1, 2, 3, 4].map((cols) => (
+              <button
+                key={cols}
+                onClick={() => setGridColumns(cols)}
+                className={`w-7 h-7 text-xs rounded transition-colors ${
+                  gridColumns === cols
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cols}
+              </button>
+            ))}
           </div>
-
-          {/* Search Mode Tabs */}
-          <div className="flex gap-4 mb-6 border-b border-gray-200">
-            <button
-              onClick={() => setSearchMode('normal')}
-              className={`px-6 py-3 font-semibold transition-all ${
-                searchMode === 'normal'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              일반 검색
-            </button>
-            <button
-              onClick={() => setSearchMode('ai')}
-              className={`px-6 py-3 font-semibold transition-all flex items-center gap-2 ${
-                searchMode === 'ai'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              AI 검색
-            </button>
-            <button
-              onClick={() => setSearchMode('aiwriter')}
-              className={`px-6 py-3 font-semibold transition-all flex items-center gap-2 ${
-                searchMode === 'aiwriter'
-                  ? 'text-green-600 border-b-2 border-green-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Edit3 className="w-4 h-4" />
-              AI 작성
-            </button>
-          </div>
-
-          {/* Normal Search UI */}
-          {searchMode === 'normal' && (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">보기:</span>
-                  {[1, 2, 3, 4].map((cols) => (
-                    <button
-                      key={cols}
-                      onClick={() => setGridColumns(cols)}
-                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                        gridColumns === cols
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {cols}칸
-                    </button>
-                  ))}
-                </div>
-
-                <Link
-                  href="/posts/new"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  글쓰기
-                </Link>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <form onSubmit={handleSearch} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="검색어를 입력하세요"
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-                  />
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                  >
-                    검색
-                  </button>
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearch('');
-                        setSearchInput('');
-                        setCurrentPage(1);
-                      }}
-                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      초기화
-                    </button>
-                  )}
-                </form>
-              </div>
-            </>
-          )}
         </div>
 
-        {/* Content */}
-        {searchMode === 'ai' ? (
-          <SemanticSearch />
-        ) : searchMode === 'aiwriter' ? (
-          <AIWriter />
-        ) : loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <p className="mt-2 text-gray-600">로딩 중...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        ) : postList ? (
-          <>
-            <PostList posts={postList.posts} gridColumns={gridColumns} />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-            <div className="mt-4 text-center text-sm text-gray-600">
-              총 {postList.total}개의 게시글
-            </div>
-          </>
-        ) : null}
+        <Link
+          href="/posts/new"
+          className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          + 글쓰기
+        </Link>
       </div>
+
+      {/* 게시글 */}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400" />
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+          {error}
+        </div>
+      ) : postList ? (
+        <>
+          <PostList posts={postList.posts} gridColumns={gridColumns} />
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+          <p className="mt-4 text-center text-xs text-gray-400">
+            총 {postList.total}개
+          </p>
+        </>
+      ) : null}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center text-gray-400">로딩 중...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

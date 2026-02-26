@@ -1,10 +1,17 @@
-from sentence_transformers import SentenceTransformer
-import chromadb
+try:
+    from sentence_transformers import SentenceTransformer
+    import chromadb
+    HAS_EMBEDDING_DEPS = True
+except ImportError:
+    HAS_EMBEDDING_DEPS = False
+
 from typing import List, Dict
 import os
 
 class EmbeddingService:
     def __init__(self):
+        if not HAS_EMBEDDING_DEPS:
+            raise RuntimeError("sentence_transformers/chromadb not installed. RAG features disabled.")
         # 한국어 + 코드에 강한 임베딩 모델
         print("Loading embedding model...")
         self.model = SentenceTransformer('jhgan/ko-sroberta-multitask')

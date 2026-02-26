@@ -5,6 +5,28 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useEffect, useRef, useState } from 'react';
+import mermaid from 'mermaid';
+
+mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+function MermaidChart({ chart }: { chart: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [svg, setSvg] = useState('');
+
+  useEffect(() => {
+    const id = `mermaid-${Math.random().toString(36).slice(2)}`;
+    mermaid.render(id, chart).then(({ svg }) => setSvg(svg)).catch(() => {});
+  }, [chart]);
+
+  return (
+    <div
+      ref={ref}
+      className="flex justify-center my-6 overflow-x-auto"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
 
 interface MarkdownPreviewProps {
   content: string;
@@ -14,12 +36,15 @@ export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
   return (
     <div className="h-full overflow-y-auto bg-white border border-gray-300 rounded-md p-6">
       {content ? (
-        <div className="prose prose-lg prose-slate max-w-none dark:prose-invert prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:my-4 prose-pre:bg-gray-900">
+        <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:my-4 prose-p:text-gray-900 prose-li:text-gray-900 prose-td:text-gray-900 prose-pre:bg-gray-900 text-gray-900">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               code({ node, inline, className, children, ...props }: any) {
                 const match = /language-(\w+)/.exec(className || '');
+                if (!inline && match?.[1] === 'mermaid') {
+                  return <MermaidChart chart={String(children).trim()} />;
+                }
                 return !inline && match ? (
                   <SyntaxHighlighter
                     style={vscDarkPlus}

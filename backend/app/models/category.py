@@ -16,3 +16,6 @@ class Category(Base):
 
     # Self-referential relationship
     children = relationship("Category", backref="parent", remote_side=[id])
+
+    # Posts in this category
+    posts = relationship("Post", back_populates="category")

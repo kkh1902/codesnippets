@@ -15,12 +15,16 @@ def get_posts(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search: Optional[str] = None,
-    
+    category_id: Optional[int] = None,
     tag: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Get all posts with pagination, optional search, category and tag filter"""
     query = db.query(Post)
+
+    # Category filter
+    if category_id:
+        query = query.filter(Post.category_id == category_id)
 
     # Tag filter
     if tag:
