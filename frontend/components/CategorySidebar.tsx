@@ -6,13 +6,13 @@ import { categoriesApi } from '@/lib/api';
 import { CategoryTree } from '@/types/category';
 import { ChevronRight, ChevronDown, FolderOpen, Folder } from 'lucide-react';
 
-export default function CategorySidebar() {
+export default function CategorySidebar({ initialCategories = [] }: { initialCategories?: CategoryTree[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const [categories, setCategories] = useState<CategoryTree[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<CategoryTree[]>(initialCategories);
+  const [loading, setLoading] = useState(initialCategories.length === 0);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const selectedId = searchParams.get('category_id')
@@ -20,10 +20,14 @@ export default function CategorySidebar() {
     : null;
 
   useEffect(() => {
+    // 초기값 있으면 펼침 상태만 세팅
+    if (initialCategories.length > 0) {
+      setExpanded(new Set(initialCategories.map((c) => c.id)));
+      return;
+    }
     categoriesApi.getCategoryTree()
       .then((data) => {
         setCategories(data);
-        // 최상위 카테고리는 기본 펼침
         setExpanded(new Set(data.map((c) => c.id)));
       })
       .catch(console.error)

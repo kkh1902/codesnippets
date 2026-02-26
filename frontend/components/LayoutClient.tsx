@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import CategorySidebar from './CategorySidebar';
 import Header from './Header';
+import { CategoryTree } from '@/types/category';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -13,7 +14,7 @@ interface UserInfo {
   is_superuser: boolean;
 }
 
-export default function LayoutClient({ children }: { children: React.ReactNode }) {
+export default function LayoutClient({ children, initialCategories = [] }: { children: React.ReactNode; initialCategories?: CategoryTree[] }) {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -55,7 +56,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   return (
     <div className="flex h-screen overflow-hidden">
       <Suspense fallback={<aside className="w-56 shrink-0 bg-white border-r border-gray-200" />}>
-        <CategorySidebar />
+        <CategorySidebar initialCategories={initialCategories} />
       </Suspense>
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header
